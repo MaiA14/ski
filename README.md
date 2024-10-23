@@ -1,4 +1,4 @@
-# Search engine of ski accomodations
+# Search engine for ski accomodations
 A Python Fast API app that integrate with a stream.
 
 ## Features
