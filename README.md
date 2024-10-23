@@ -8,7 +8,7 @@
     b) Stateless API
 
 ## Dependencies
-- Node.js
+- Node.js (v22.4.0 is preferred)
 - MongoDB
 
 ## Installation
