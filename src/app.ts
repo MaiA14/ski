@@ -5,7 +5,6 @@ import * as cookieParser from 'cookie-parser';
 import * as session from 'express-session'
 import config from './config/config';
 
-
 export class App {
     public app: express.Application;
     public port: number;

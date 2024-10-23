@@ -1,7 +1,7 @@
 import axios from "axios";
-import { PROVIDERS } from "../config/config";
 import { COLLECTION } from "../constants";
 import { DBService } from "./db/db.service";
+import { PROVIDERS } from "../config/providers";
 
 export default class AccommodationsService {
     private dbService = new DBService();

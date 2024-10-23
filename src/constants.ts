@@ -11,7 +11,6 @@ export const COLLECTION = {
     ACCOMMODATIONS: 'accomodations'
 }
 
-
 export enum OPERANDS {
     EQUALS = '==',
     LOWER_THAN = '<',
@@ -24,7 +23,6 @@ export enum OPERANDS {
     IN = 'in',
     CONTAINED = 'contained'
 }
-
 
 export enum ORDER_BY_DIRECTION {
     ASC = 'asc',

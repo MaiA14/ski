@@ -5,7 +5,6 @@ import AccommodationsService from "../services/accommodations.service";
 import Bottleneck from "bottleneck";
 import { v4 as uuidv4 } from 'uuid';
 import { DBService } from "../services/db/db.service";
-import { COLLECTION } from "../constants";
 
 const limiter = new Bottleneck({
     minTime: 100,
@@ -19,7 +18,6 @@ export default class AccommodationsController {
     public path = `/api/${AccommodationsController.controllerName}`;
     public router: any = express.Router();
     private accommodationsService = new AccommodationsService();
-    private dbService = new DBService(); // Inject DBService
 
     constructor() {
         this.intializeRoutes();
@@ -35,16 +33,16 @@ export default class AccommodationsController {
 
     public async searchById(req: TypedRequest<{ id: string }>, res: express.Response): Promise<void> {
         console.log('searchById', req.params);
-
+    
         const { id } = req.params;
-
+    
         if (!id) {
             res.status(404).send('Error - no id supplied');
             return;
         }
-
+    
         try {
-            const results = await this.dbService.get(COLLECTION.ACCOMMODATIONS, id); // Accessing the collection via the constant
+            const results = await this.accommodationsService.getSearchResults(id); // Use the service method
             if (!results) {
                 res.status(404).send('Error - results not found for this id');
                 return;
@@ -69,33 +67,18 @@ export default class AccommodationsController {
         const groupSizes = Array.from({ length: maxGroupSize - group_size + 1 }, (_, i) => group_size + i);
 
         const searchId = uuidv4(); 
-        await this.dbService.add(COLLECTION.ACCOMMODATIONS, { id: searchId, results: [] });
+        await this.accommodationsService.initSearchResults(searchId); // Assuming you implement this method
         res.status(200).json({ searchId });
-
-        const sendEvent = async (data: any) => {
-            const currentData = await this.dbService.get(COLLECTION.ACCOMMODATIONS, searchId);
-            const updatedResults = currentData ? currentData.results : [];
-            const exists = updatedResults.some(result => 
-                result.size === data.size && 
-                result.accommodations.some(acc => acc.id === data.accommodations.id)
-            );
-
-            if (!exists) {
-                updatedResults.push(data);
-            }
-
-            await this.dbService.set(COLLECTION.ACCOMMODATIONS, searchId, { results: updatedResults });
-        };
 
         const promises = groupSizes.map(size => 
             limiter.schedule(() => 
                 this.accommodationsService.fetchAccommodations(ski_site, from_date, to_date, size)
                     .then(results => {
-                        sendEvent({ size, accommodations: results });
+                        this.accommodationsService.sendEvent(searchId, { size, accommodations: results });
                     })
                     .catch(error => {
                         console.log('Error fetching accommodations:', error);
-                        sendEvent({ size, error: error.message });
+                        this.accommodationsService.sendEvent(searchId, { size, error: error.message });
                     })
             )
         );
