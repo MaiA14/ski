@@ -117,7 +117,7 @@ export class MongoService implements IDB {
             if (doc) { // update document
                 data.id = docId;
 
-                const before = { ...doc }; // Store the document before the update
+                const before = { ...doc }; 
 
                 if (shouldMerge) {
                     const mergedData = _.merge({}, doc, data);
@@ -132,7 +132,7 @@ export class MongoService implements IDB {
                 this.eventEmitter.emit(collectionName, {
                     collectionName,
                     type: EVENTS.UPDATE,
-                    before: null,
+                    before,
                     after: updatedDoc
                 });
 
