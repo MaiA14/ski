@@ -4,7 +4,6 @@ import { singleton } from "../decorators/singleton";
 import AccommodationsService from "../services/accommodations.service";
 import Bottleneck from "bottleneck";
 import { v4 as uuidv4 } from 'uuid';
-import { DBService } from "../services/db/db.service";
 
 const limiter = new Bottleneck({
     minTime: 100,
@@ -28,7 +27,10 @@ export default class AccommodationsController {
             this.path + '/search/:id',
             this.searchById.bind(this)
         );
-        this.router.post(this.path + '/search', this.search.bind(this));
+        this.router.post(
+            this.path + '/search',
+            this.search.bind(this)
+        );
     }
 
     public async searchById(req: TypedRequest<{ id: string }>, res: express.Response): Promise<void> {
@@ -37,39 +39,42 @@ export default class AccommodationsController {
         const { id } = req.params;
     
         if (!id) {
-            res.status(404).send('Error - no id supplied');
+            res.status(404).json({ error: 'Error - no id supplied' });
             return;
         }
     
         try {
-            const results = await this.accommodationsService.getSearchResults(id); // Use the service method
+            const results = await this.accommodationsService.getSearchResults(id); 
             if (!results) {
-                res.status(404).send('Error - results not found for this id');
+                res.status(404).json({ error: 'Error - results not found for this id' });
                 return;
             }
             res.status(200).json(results);
         } catch (error) {
             console.log('searchByIdError ', error);
-            res.status(500).send('Error in searchById');
+            res.status(500).json({ error: 'Error in searchById' }); 
         }
-    }
+    }    
 
     public async search(req: TypedRequest<{ ski_site: number; from_date: string; to_date: string; group_size: number }>, res: express.Response): Promise<void> {
         console.log('search', req.body);
-
-        if (!req.body || Object.keys(req.body).length === 0) {
-            res.status(400).send('Error - search accommodation, empty payload supplied');
-            return;
+    
+        const requiredFields = ['ski_site', 'from_date', 'to_date', 'group_size'];
+        for (const field of requiredFields) {
+            if (!req.body[field]) {
+                res.status(400).json({ error: `Error - missing required field: ${field}` });
+                return;
+            }
         }
-
+    
         const { ski_site, from_date, to_date, group_size } = req.body;
         const maxGroupSize = 10;
         const groupSizes = Array.from({ length: maxGroupSize - group_size + 1 }, (_, i) => group_size + i);
-
+    
         const searchId = uuidv4(); 
-        await this.accommodationsService.initSearchResults(searchId); // Assuming you implement this method
+        await this.accommodationsService.initSearchResults(searchId); 
         res.status(200).json({ searchId });
-
+    
         const promises = groupSizes.map(size => 
             limiter.schedule(() => 
                 this.accommodationsService.fetchAccommodations(ski_site, from_date, to_date, size)
@@ -82,7 +87,8 @@ export default class AccommodationsController {
                     })
             )
         );
-
+    
         await Promise.allSettled(promises);
     }
+    
 }
