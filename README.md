@@ -22,7 +22,9 @@ $ npm install
 ```bash
 $ npm run start
 ```
-
+> [!IMPORTANT]
+> Server is running on port 4000 (but you can change the port using the config file)
+מ
 
 ## Endpoints
 <b> Search: </b> <br>
