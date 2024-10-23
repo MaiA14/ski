@@ -40,3 +40,9 @@ Search by id: <br>
  http://localhost:4000/api/accommodations/search/:id
 
 ![Image of design](https://res.cloudinary.com/dtwqtpteb/image/upload/v1729685992/g8w5gvpsfzeyfybv1tql.png)
+
+Search by id - handle error: <br>
+ http://localhost:4000/api/accommodations/search/:id
+
+![Image of design](https://res.cloudinary.com/dtwqtpteb/image/upload/v1729707665/z1qw4heulgijtay4djs7.png)
+
