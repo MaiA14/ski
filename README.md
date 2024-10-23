@@ -3,7 +3,7 @@
 ## Features
 - Search - returns an ID for a specific search (according payload)
 - SearchById - returns the results for specfic search key
-- <ins>Bonuse: </ins> <br>
+- <ins>Bonus: </ins> <br>
     a) Rate limiter  <br>
     b) Stateless API
 
