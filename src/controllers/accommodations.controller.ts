@@ -89,6 +89,5 @@ export default class AccommodationsController {
         );
     
         await Promise.allSettled(promises);
-    }
-    
+    }  
 }
