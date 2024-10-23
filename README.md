@@ -5,7 +5,7 @@ A Python Fast API app that integrate with a stream.
 - Search - returns an ID for a specific search (according payload)
 - SearchById - returns the results for specfic search key
 - Bonus:
-    a) rate limiter
+    a) rate limiter  <br>
     b) Stateless API
 
 ## Dependencies
