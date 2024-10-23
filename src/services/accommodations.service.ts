@@ -24,8 +24,9 @@ export default class AccommodationsService {
         }
     }
 
-    public async initSearchResults(searchId: string): Promise<void> {
-        await this.dbService.add(COLLECTION.ACCOMMODATIONS, { id: searchId, results: [] });
+    public async initSearchResults(data): Promise<void> {
+        const searchCriteria = data.id; 
+        await this.dbService.set(COLLECTION.ACCOMMODATIONS, searchCriteria, {results:[], ...data});
     }
 
     public async getSearchResults(searchId: string): Promise<any> {

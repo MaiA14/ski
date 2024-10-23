@@ -24,12 +24,16 @@ $ npm run start
 ```
 
 
-
-
 Search: <br>
  http://localhost:4000/api/accommodations/search
 
 ![Image of design](https://res.cloudinary.com/dtwqtpteb/image/upload/v1729685902/obtuuo0s1l4sezplzvlc.png)
+
+
+Search - handle errros: <br>
+ http://localhost:4000/api/accommodations/search
+
+![Image of design](https://res.cloudinary.com/dtwqtpteb/image/upload/v1729707517/dcre6cfik8umcoy21gfu.png)
 
 
 Search by id: <br>

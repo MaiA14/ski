@@ -2,13 +2,8 @@ import * as express from "express";
 import { TypedRequest } from "../..";
 import { singleton } from "../decorators/singleton";
 import AccommodationsService from "../services/accommodations.service";
-import Bottleneck from "bottleneck";
 import { v4 as uuidv4 } from 'uuid';
 
-const limiter = new Bottleneck({
-    minTime: 100,
-    maxConcurrent: 5,
-});
 
 @singleton
 export default class AccommodationsController {
@@ -66,28 +61,9 @@ export default class AccommodationsController {
                 return;
             }
         }
-    
-        const { ski_site, from_date, to_date, group_size } = req.body;
-        const maxGroupSize = 10;
-        const groupSizes = Array.from({ length: maxGroupSize - group_size + 1 }, (_, i) => group_size + i);
-    
-        const searchId = uuidv4(); 
-        await this.accommodationsService.initSearchResults(searchId); 
+        
+        const searchId = uuidv4();
+        await this.accommodationsService.initSearchResults({id: searchId, terms: req.body}); 
         res.status(200).json({ searchId });
-    
-        const promises = groupSizes.map(size => 
-            limiter.schedule(() => 
-                this.accommodationsService.fetchAccommodations(ski_site, from_date, to_date, size)
-                    .then(results => {
-                        this.accommodationsService.sendEvent(searchId, { size, accommodations: results });
-                    })
-                    .catch(error => {
-                        console.log('Error fetching accommodations:', error);
-                        this.accommodationsService.sendEvent(searchId, { size, error: error.message });
-                    })
-            )
-        );
-    
-        await Promise.allSettled(promises);
-    }  
+    }
 }

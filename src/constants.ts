@@ -33,3 +33,9 @@ export interface IDBOrderBy {
     fieldName: string,
     direction?: ORDER_BY_DIRECTION
 }
+
+export enum EVENTS {
+    ADD = 'add',
+    DELETE = 'delete',
+    UPDATE = 'update',
+}

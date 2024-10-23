@@ -1,15 +1,21 @@
 import { singleton } from '../../decorators/singleton';
 import { MongoService } from './mongo.service';
+import { EventEmitter } from 'events';
 
 @singleton
 export class DBService {
     private dbType: string = '';
     private db: any;
 
-    constructor(dbType?: string) {
+    constructor(dbType?: string, eventEmitter?: EventEmitter) {
         switch (dbType) {
+            case 'MONGO': {
+                this.db = new MongoService(eventEmitter); 
+                break;
+            }
+            // Add other database types as needed
             default: {
-                this.db = new MongoService();
+                this.db = new MongoService(eventEmitter); 
             }
         }
     }

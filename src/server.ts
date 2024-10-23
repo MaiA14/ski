@@ -3,14 +3,20 @@ import config from "./config/config";
 import { DBS } from "./constants";
 import AccommodationsController from "./controllers/accommodations.controller";
 import { DBService } from "./services/db/db.service";
+import { EventEmitter } from 'events'; 
+import TriggerService from "./services/trigger.service";
 
 let dbType = DBS.MONGO;
-let db = new DBService(dbType);
+const eventEmitter = new EventEmitter();
+let db = new DBService(dbType, eventEmitter);
+const triggerService = new TriggerService(eventEmitter);
+
 
 const controllers =
 {
     [AccommodationsController.controllerName]: new AccommodationsController() 
 };
+
 
 switch (dbType) {
     case DBS.MONGO: {

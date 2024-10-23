@@ -1,19 +1,20 @@
 import { MongoClient } from 'mongodb';
-import _ = require('lodash');
+import * as _ from 'lodash';
 import IDB from '../../types/db.type';
 import { singleton } from '../../decorators/singleton';
 import config from '../../config/config';
-import { IDBOrderBy, OPERANDS } from '../../constants';
-
+import { EVENTS, IDBOrderBy, OPERANDS } from '../../constants';
+import { EventEmitter } from 'events';
 
 @singleton
 export class MongoService implements IDB {
-    static mongoService: MongoService;
-    private mongoClient: any;
+    private mongoClient: MongoClient;
     private mongoDb: any;
     jobInterval: any;
+    private eventEmitter: EventEmitter;
 
-    constructor() {
+    constructor(eventEmitter: EventEmitter) {
+        this.eventEmitter = eventEmitter; // Store the eventEmitter instance
         this.mongoClient = new MongoClient(`mongodb://${config.server.ip}:27017`);
     }
 
@@ -24,7 +25,6 @@ export class MongoService implements IDB {
             console.log('Mongo is connected');
         } catch (e: any) {
             console.log('connect - could not connect to db', e.stack);
-            console.log('mongo existing app 2');
             process.exit(1);
         }
     }
@@ -34,28 +34,24 @@ export class MongoService implements IDB {
         setTimeout(() => {
             console.log('disconnect');
             this.mongoDb.close();
-        }, 5000)
+        }, 5000);
     }
 
     private getOperand(operand: string): string {
         let op = null;
         switch (operand) {
-            case OPERANDS.GREATER_OR_EQUALS: {
+            case OPERANDS.GREATER_OR_EQUALS:
                 op = '$gte';
-            }
                 break;
-            case OPERANDS.LOWER_OR_EQUALS: {
+            case OPERANDS.LOWER_OR_EQUALS:
                 op = '$lte';
-            }
                 break;
-            case OPERANDS.EQUALS: {
+            case OPERANDS.EQUALS:
                 op = '$eq';
-            }
                 break;
-
-            case OPERANDS.NOT_EQUALS: {
-                op = '$ne'
-            }
+            case OPERANDS.NOT_EQUALS:
+                op = '$ne';
+                break;
         }
         return op;
     }
@@ -65,68 +61,24 @@ export class MongoService implements IDB {
         if (docId) {
             query = await this.mongoDb.collection(collectionName).findOne({ id: docId });
             const result = query;
-            if (!result) {
-                return null;
-            } else {
-                const data: any = result;
-                return { id: result.id, ...data };
-            }
-        }
-
-        else if (where && Object.keys(where).length > 0) {
+            return result ? { id: result.id, ...result } : null;
+        } else if (where && Object.keys(where).length > 0) {
             const terms = Object.keys(where);
             const condition: any = {};
-            for (let i = 0; i < terms.length; i++) {
-                if (_.isArray(where[terms[i]])) {
-                    for (let j = 0; j < where[terms[i]].length; j++) {
-                        condition[terms[i]] = { [this.getOperand(where[terms[i]][j].operand)]: where[terms[i]][j].value };
-                    }
+            for (const term of terms) {
+                if (_.isArray(where[term])) {
+                    condition[term] = { [this.getOperand(where[term][0].operand)]: where[term][0].value };
                 } else {
-                    condition[terms[i]] = { [this.getOperand(where[terms[i]].operand)]: where[terms[i]].value };
+                    condition[term] = { [this.getOperand(where[term].operand)]: where[term].value };
                 }
             }
 
-            let results;
-            try {
-                results = await this.mongoDb.collection(collectionName)
-                    .find(condition)
-                    .toArray();
-            } catch { }
-
-            if (!results) {
-                return [];
-            } else {
-                const items: any[] = [];
-                let doc = null;
-                for (let i = 0; i < results.length; i++) {
-                    doc = results[i];
-                    const data: any = doc;
-                    items.push({ id: doc.id, ...data });
-                }
-                return items;
-            }
+            const results = await this.mongoDb.collection(collectionName).find(condition).toArray();
+            return results.map(doc => ({ id: doc.id, ...doc })) || [];
         } else {
-            let results;
-            try {
-                results = await this.mongoDb.collection(collectionName)
-                    .find({})
-                    .toArray();
-            } catch { }
-
-            if (!results) {
-                return null;
-            } else {
-                const items: any[] = [];
-                let doc = null;
-                for (let i = 0; i < results.length; i++) {
-                    doc = results[i];
-                    const data: any = doc;
-                    items.push({ id: doc.id, ...data });;
-                }
-                return items;
-            }
+            const results = await this.mongoDb.collection(collectionName).find({}).toArray();
+            return results.map(doc => ({ id: doc.id, ...doc })) || null;
         }
-
     }
 
     public async add(collectionName: string, data: any) {
@@ -143,12 +95,17 @@ export class MongoService implements IDB {
         try {
             const doc: any = await this.mongoDb.collection(collectionName).insertOne({ ...data });
             data.id = doc.insertedId.toString();
-            await this.mongoDb.collection(collectionName).updateOne({ _id: doc.insertedId }, { $set: data }, { upsert: false });
             const addedDoc = await this.mongoDb.collection(collectionName).findOne({ _id: doc.insertedId });
-            console.log('MongoService add addedDoc', addedDoc);
+
+            this.eventEmitter.emit(collectionName, {
+                collectionName,
+                type: EVENTS.ADD,
+                before: null,
+                after: addedDoc
+            });
+
             return addedDoc;
-        }
-        catch (e) {
+        } catch (e) {
             console.log("MongoService add - cannot add doc", e);
         }
     }
@@ -157,24 +114,41 @@ export class MongoService implements IDB {
         const data = _.cloneDeep(dataArg);
         try {
             const doc = await this.mongoDb.collection(collectionName).findOne({ id: docId });
-            if (doc !== null) { // update document
+            if (doc) { // update document
                 data.id = docId;
 
+                const before = { ...doc }; // Store the document before the update
+
                 if (shouldMerge) {
-                    const mergedData = _.merge({}, doc, data); // merge partly data with existing doc
+                    const mergedData = _.merge({}, doc, data);
                     delete mergedData._id;
-                    await this.mongoDb.collection(collectionName).updateOne({ _id: doc._id }, { $set: { ...mergedData } }, { upsert: false });
+                    await this.mongoDb.collection(collectionName).updateOne({ _id: doc._id }, { $set: { ...mergedData } });
                 } else {
-                    await this.mongoDb.collection(collectionName).updateOne({ _id: doc._id }, { $set: { ...data } }, { upsert: false });
+                    await this.mongoDb.collection(collectionName).updateOne({ _id: doc._id }, { $set: { ...data } });
                 }
 
                 const updatedDoc = await this.mongoDb.collection(collectionName).findOne({ id: docId });
+                
+                this.eventEmitter.emit(collectionName, {
+                    collectionName,
+                    type: EVENTS.UPDATE,
+                    before: null,
+                    after: updatedDoc
+                });
+
                 return updatedDoc;
             } else {
                 data.id = docId; // set new document with custom id
                 delete data._id;
-                await this.mongoDb.collection(collectionName).insertOne({ ...data }); // returns acknolodege
+                await this.mongoDb.collection(collectionName).insertOne({ ...data });
                 const newDocUpdated = await this.mongoDb.collection(collectionName).findOne({ id: docId });
+                this.eventEmitter.emit(collectionName, {
+                    collectionName,
+                    type: EVENTS.ADD,
+                    before: null,
+                    after: newDocUpdated
+                });
+
                 return newDocUpdated;
             }
         } catch (e) {
@@ -185,9 +159,18 @@ export class MongoService implements IDB {
     public async delete(collectionName: string, docId: string): Promise<any> {
         if (docId) {
             try {
+                const doc = await this.mongoDb.collection(collectionName).findOne({ id: docId });
+                
                 await this.mongoDb.collection(collectionName).deleteOne({ id: docId });
+                
+                this.eventEmitter.emit(collectionName, {
+                    collectionName,
+                    type: EVENTS.DELETE,
+                    before: doc,
+                    after: null
+                });
             } catch (e) {
-                console.log('cannot delete specific doc ', e)
+                console.log('cannot delete specific doc ', e);
             }
         } else {
             try {
