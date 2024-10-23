@@ -24,7 +24,8 @@ $ npm run start
 ```
 
 
-Search: <br>
+## Endpoints
+<b> Search: </b> <br>
  http://localhost:4000/api/accommodations/search
 
 ![Image of design](https://res.cloudinary.com/dtwqtpteb/image/upload/v1729685902/obtuuo0s1l4sezplzvlc.png)
@@ -36,7 +37,7 @@ Handle errros: <br>
 ![Image of design](https://res.cloudinary.com/dtwqtpteb/image/upload/v1729707517/dcre6cfik8umcoy21gfu.png)
 
 
-Search by id: <br>
+<b> Search by id: </b> <br>
  http://localhost:4000/api/accommodations/search/:id
 
 ![Image of design](https://res.cloudinary.com/dtwqtpteb/image/upload/v1729685992/g8w5gvpsfzeyfybv1tql.png)
