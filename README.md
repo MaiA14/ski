@@ -41,7 +41,7 @@ Handle errros: <br>
 <b> Search by id: </b> <br>
  http://localhost:4000/api/accommodations/search/:id
 
-![Image of design](https://res.cloudinary.com/dtwqtpteb/image/upload/v1729685992/g8w5gvpsfzeyfybv1tql.png)
+![Image of design](https://res.cloudinary.com/dtwqtpteb/image/upload/v1729713165/pxezzmqsqu2q3itia1yl.png)
 
 Handle error: <br>
 
