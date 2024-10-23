@@ -4,7 +4,7 @@
 - Search - returns an ID for a specific search (according payload)
 - SearchById - returns the results for specfic search key
 - Bonus: <br>
-    a) rate limiter  <br>
+    a) Rate limiter  <br>
     b) Stateless API
 
 ## Dependencies
