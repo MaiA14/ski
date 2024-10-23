@@ -33,19 +33,22 @@ export default class AccommodationsService {
         return await this.dbService.get(COLLECTION.ACCOMMODATIONS, searchId);
     }
 
-    public async sendEvent(searchId: string, data: any): Promise<void> {
+    public async sendEvent(searchId: string, data: any[]): Promise<void> {
         const currentData = await this.dbService.get(COLLECTION.ACCOMMODATIONS, searchId);
         const updatedResults = currentData ? currentData.results : [];
-
-        const exists = updatedResults.some(result => 
-            result.size === data.size && 
-            result.accommodations.some(acc => acc.id === data.accommodations.id)
-        );
-
-        if (!exists) {
-            updatedResults.push(data);
+    
+        for (const accommodation of data) {
+            const exists = updatedResults.some(result => 
+                result.size === accommodation.size && 
+                result.id === accommodation.id
+            );
+    
+            if (!exists) {
+                updatedResults.push(accommodation);
+            }
         }
-
+    
         await this.dbService.set(COLLECTION.ACCOMMODATIONS, searchId, { results: updatedResults });
-    }
+    }    
+    
 }

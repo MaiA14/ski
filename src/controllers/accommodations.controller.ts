@@ -44,12 +44,20 @@ export default class AccommodationsController {
                 res.status(404).json({ error: 'Error - results not found for this id' });
                 return;
             }
-            res.status(200).json(results);
+    
+            const response = {
+                id: results.id,
+                results: results.results
+            };
+    
+        
+            res.status(200).json(response);
         } catch (error) {
             console.log('searchByIdError ', error);
             res.status(500).json({ error: 'Error in searchById' }); 
         }
-    }    
+    }
+      
 
     public async search(req: TypedRequest<{ ski_site: number; from_date: string; to_date: string; group_size: number }>, res: express.Response): Promise<void> {
         console.log('search', req.body);

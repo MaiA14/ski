@@ -30,7 +30,7 @@ $ npm run start
 <b> Search: </b> <br>
  http://localhost:4000/api/accommodations/search
 
-![Image of design](https://res.cloudinary.com/dtwqtpteb/image/upload/v1729685902/obtuuo0s1l4sezplzvlc.png)
+![Image of design](https://res.cloudinary.com/dtwqtpteb/image/upload/v1729712936/ijet2k1fm4uf1yqkorjw.png)
 
 
 Handle errros: <br>
