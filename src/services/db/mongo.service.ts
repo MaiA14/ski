@@ -64,7 +64,6 @@ export class MongoService implements IDB {
         let query;
         if (docId) {
             query = await this.mongoDb.collection(collectionName).findOne({ id: docId });
-            console.log('query', query);
             const result = query;
             if (!result) {
                 return null;
@@ -84,7 +83,6 @@ export class MongoService implements IDB {
                     }
                 } else {
                     condition[terms[i]] = { [this.getOperand(where[terms[i]].operand)]: where[terms[i]].value };
-                    console.log('conditions', condition)
                 }
             }
 

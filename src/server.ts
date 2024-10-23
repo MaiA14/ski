@@ -12,7 +12,6 @@ const controllers =
     [AccommodationsController.controllerName]: new AccommodationsController() 
 };
 
-
 switch (dbType) {
     case DBS.MONGO: {
         db.connect().then(async () => {
@@ -21,7 +20,6 @@ switch (dbType) {
         });
     }
 }
-
 
 // handle disconnect 
 function notifyExit() {
