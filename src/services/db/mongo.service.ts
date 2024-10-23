@@ -116,7 +116,6 @@ export class MongoService implements IDB {
             const doc = await this.mongoDb.collection(collectionName).findOne({ id: docId });
             if (doc) { // update document
                 data.id = docId;
-
                 const before = { ...doc }; 
 
                 if (shouldMerge) {
